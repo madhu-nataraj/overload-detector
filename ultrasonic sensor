@@ -1,0 +1,54 @@
+import RPi.GPIO as GPIO
+import subprocess
+import time
+import httplib,urllib
+
+id='229373'
+wapi='AY17KZVG9EISB6VI'
+
+GPIO.setmode(GPIO.BCM)
+
+TRIG = 23
+ECHO = 24
+
+GPIO.setup(TRIG,GPIO.OUT)
+GPIO.setup(ECHO,GPIO.IN)
+GPIO.output(TRIG, False)
+
+
+time.sleep(2)
+while(True):
+    GPIO.output(TRIG, True)
+    time.sleep(0.00001)
+    GPIO.output(TRIG, False)
+    while GPIO.input(ECHO)==0:
+        pulse_start = time.time()
+
+    while GPIO.input(ECHO)==1:
+        pulse_end = time.time()
+    pulse_duration = pulse_end - pulse_start
+
+    distance = pulse_duration*17150
+
+    distance = round(distance, 2)
+
+    params = urllib.urlencode({'field1':distance,'key':wapi})
+
+    headers = {"Content-typZZe": "application/x-www-formurlencoded","Accept": "text/plain"}
+
+    conn = httplib.HTTPConnection("api.thingspeak.com:80")
+
+    time.sleep(2)
+
+    try:
+
+		conn.request("POST","/update",params,headers)
+        response=conn.getresponse({distance})
+        print "distance:", distance
+        print response.status, response.reason
+        data=response.read({distance})
+        conn.close()
+    except:
+        print "connection failed"
+
+GPIO.cleanup()
